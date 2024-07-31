@@ -1,6 +1,13 @@
 const puppeteer = require('puppeteer')
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
+const { timeout } = require('puppeteer');
 dotenv.config();
+
+function delay(time) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, time)
+    });
+}
 
 async function run(stockName) {
     const browser = await puppeteer.launch({
@@ -75,9 +82,9 @@ async function run(stockName) {
 
     let addAlertBtn
     try {
-        addAlertBtn = await page.waitForSelector('.leftSlot-u7Ufi_N7 .button-xNqEcuN2', { timeout: 1000 }) 
+        addAlertBtn = await page.waitForSelector('.leftSlot-u7Ufi_N7 .button-xNqEcuN2', { timeout: 1000 })
     }
-    catch(e) {
+    catch (e) {
         const toolBar = await page.waitForSelector('.toolbar-S4V6IoxY')
         const alertBtn = await toolBar.$('button:nth-child(2)')
         await alertBtn.click({
@@ -119,13 +126,45 @@ const runIndcator = async () => {
     // Add Indcator
 
     const indcatorsBtn = await page.waitForSelector('#header-toolbar-indicators button');
-    await indcatorsBtn.click();
+    await indcatorsBtn.click({
+        delay: 100
+    });
 
-    const indcator = await page.waitForSelector('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq');
-    await indcator.click();
-    
-    const exitBtn = await page.waitForSelector('.container-BZKENkhT button');
-    await exitBtn.click();
+    await page.waitForSelector('.container-hrZZtP0J .listContainer-I087YV6b');
+
+    try {
+        const indcator = await page.$('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Advance Decline Line"]'); // Select Indcator with [data-title]
+        await indcator.click('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Advance Decline Line"]', {
+            delay: 1000,
+            offset: {
+                x: 3,
+                y: 3
+            },
+            count: 2
+        })
+    }
+    catch (e) {
+        throw new Error()
+    }
+
+    try {
+        const goProPopup = await page.waitForSelector('div[data-dialog-name="gopro"]', {
+            timeout: 300
+        })
+        await page.click('button[aria-label="Close"]')
+    }
+    catch (e) { }
+
+    const exitBtn = await page.waitForSelector('button[data-name="close"]');
+    await exitBtn.click({
+        delay: 100
+    });
+
+    // Save Changes
+
+    await page.click('button#header-toolbar-save-load', {
+        delay: 1000
+    })
 
     // Select Indcator from Chart
 
@@ -153,8 +192,40 @@ const runIndcator = async () => {
     await page.keyboard.up('Alt')
     await page.keyboard.up('A')
 
+    // // Notification Tab
+
+    // const notificationTabBtn = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] .tabsWrapper-v6smTDmN div[data-name="underline-tabs-buttons"] div#id_alerts-create-edit-dialog-tabs_tablist button#alert-dialog-tabs__notifications');
+    // await notificationTabBtn.click({
+    //     delay: 10
+    // })
+
+    // const enableWebhook = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] .tabsWrapper-v6smTDmN div[data-name="underline-tabs-buttons"] div#id_alerts-create-edit-dialog-tabs_tablist button#alert-dialog-tabs__notifications');
+    // await notificationTabBtn.click({
+    //     delay: 10
+    // })
+
+    // await page.click('#alert-dialog-tabs__notifications',
+    //     { delay: 1000 }
+    // )
+
+    // await page.click('input[data-name="webhook"]',
+    //     { delay: 100 }
+    // );
+
+    // await page.type('input#webhook-url',
+    //     'http://18.220.204.73/webhook',
+    //     { delay: 10 }
+    // );
+
     const createAlertBtn = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] form .footerWrapper-xhmb_vtW div div button[data-name="submit"]');
-    await createAlertBtn.click();
+    await createAlertBtn.click({
+        delay: 100
+    });
+
+    // Save Changes
+    await page.click('button#header-toolbar-save-load', {
+        delay: 1000
+    })
 }
 
 runIndcator()
