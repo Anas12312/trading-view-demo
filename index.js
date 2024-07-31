@@ -5,48 +5,56 @@ dotenv.config();
 async function run(stockName) {
     const browser = await puppeteer.launch({
         timeout: 50_000,
-        headless: false
+        headless: false,
+        userDataDir: process.env.CHROME_PATH,
+        args: [
+            "--profile-directory=Profile 1"
+        ]
     })
 
     const page = await browser.newPage()
-    await page.goto("https://www.tradingview.com/pricing/?source=header_go_pro_button&feature=start_free_trial")
-    await page.waitForSelector('.tv-header__area.tv-header__area--user')
 
-    const header = await page.$('.tv-header__area.tv-header__area--user')
 
-    const accountBtn = (await header.$$('button')).at(1)
-    await accountBtn.click({
-        delay: 100
-    })
+    // await page.goto("https://www.tradingview.com/pricing/?source=header_go_pro_button&feature=start_free_trial")
+    // await page.waitForSelector('.tv-header__area.tv-header__area--user')
 
-    await page.waitForSelector('.menuBox-Kq3ruQo8 button')
+    // const header = await page.$('.tv-header__area.tv-header__area--user')
 
-    const menuElement = (await page.$$('.menuBox-Kq3ruQo8 button'))
-    const signInBtn = menuElement.at(1);
-    await signInBtn.click()
-    await page.waitForSelector('.container-R4aQJbLh')
+    // const accountBtn = (await header.$$('button')).at(1)
+    // await accountBtn.click({
+    //     delay: 100
+    // })
 
-    const emailButton = (await page.$$('.container-R4aQJbLh button')).at(5);
-    await emailButton.click()
-    await page.waitForSelector('.form-LQwxK8Bm')
+    // await page.waitForSelector('.menuBox-Kq3ruQo8 button')
 
-    const emailInput = await page.$('.form-LQwxK8Bm #id_username');
-    await emailInput.type(process.env.EMAIL, {
-        delay: 10
-    })
+    // const menuElement = (await page.$$('.menuBox-Kq3ruQo8 button'))
+    // const signInBtn = menuElement.at(1);
+    // await signInBtn.click()
+    // await page.waitForSelector('.container-R4aQJbLh')
 
-    const passwordInput = await page.$('.form-LQwxK8Bm #id_password');
-    await passwordInput.type(process.env.PASSWORD, {
-        delay: 10
-    })
+    // const emailButton = (await page.$$('.container-R4aQJbLh button')).at(5);
+    // await emailButton.click()
+    // await page.waitForSelector('.form-LQwxK8Bm')
 
-    const logInBtn = (await page.$$('.form-LQwxK8Bm button')).at(1);
-    await logInBtn.click({
-        count: 1,
-        delay: 10
-    })
+    // const emailInput = await page.$('.form-LQwxK8Bm #id_username');
+    // await emailInput.type(process.env.EMAIL, {
+    //     delay: 10
+    // })
 
-    await page.waitForNavigation({ timeout: 60_000 })
+    // const passwordInput = await page.$('.form-LQwxK8Bm #id_password');
+    // await passwordInput.type(process.env.PASSWORD, {
+    //     delay: 10
+    // })
+
+    // const logInBtn = (await page.$$('.form-LQwxK8Bm button')).at(1);
+    // await logInBtn.click({
+    //     count: 1,
+    //     delay: 10
+    // })
+
+    // await page.waitForNavigation({ timeout: 60_000 })
+
+
     await page.goto("https://www.tradingview.com/chart/")
 
     await page.waitForSelector('#header-toolbar-symbol-search')
@@ -65,10 +73,11 @@ async function run(stockName) {
 
     await page.click('.itemRow-oRSs8UQo div:nth-child(1)')
 
-
-    let addAlertBtn = await page.waitForSelector('.leftSlot-u7Ufi_N7 .button-xNqEcuN2', { timeout: 1000 })
-
-    if (!addAlertBtn) {
+    let addAlertBtn
+    try {
+        addAlertBtn = await page.waitForSelector('.leftSlot-u7Ufi_N7 .button-xNqEcuN2', { timeout: 1000 }) 
+    }
+    catch(e) {
         const toolBar = await page.waitForSelector('.toolbar-S4V6IoxY')
         const alertBtn = await toolBar.$('button:nth-child(2)')
         await alertBtn.click({
@@ -91,4 +100,61 @@ async function run(stockName) {
         delay: 10
     })
 }
-run('AAPL')
+// run('AAPL')
+
+const runIndcator = async () => {
+    const browser = await puppeteer.launch({
+        timeout: 50_000,
+        headless: false,
+        userDataDir: process.env.CHROME_PATH,
+        args: [
+            "--profile-directory=Profile 1"
+        ]
+    })
+
+    const page = await browser.newPage()
+
+    await page.goto("https://www.tradingview.com/chart/")
+
+    // Add Indcator
+
+    const indcatorsBtn = await page.waitForSelector('#header-toolbar-indicators button');
+    await indcatorsBtn.click();
+
+    const indcator = await page.waitForSelector('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq');
+    await indcator.click();
+    
+    const exitBtn = await page.waitForSelector('.container-BZKENkhT button');
+    await exitBtn.click();
+
+    // Select Indcator from Chart
+
+    await page.waitForSelector('.chart-markup-table.pane');
+    const charts = await page.$$('.chart-markup-table.pane')
+
+    const indcatorChart = charts.at(1);
+
+    const indcatorLegend = await indcatorChart.$('.legend-l31H9iuA .sourcesWrapper-l31H9iuA .sources-l31H9iuA div:last-child .noWrapWrapper-l31H9iuA')
+    await indcatorLegend.click();
+
+    // Setting Button
+
+    // const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-settings-action"]')
+    // await indcatorSettingButton.click();
+
+    // More Action Button
+
+    const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-more-action"]')
+    await indcatorSettingButton.click();
+
+    await page.keyboard.down('Alt')
+    await page.keyboard.down('A')
+
+    await page.keyboard.up('Alt')
+    await page.keyboard.up('A')
+
+    const createAlertBtn = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] form .footerWrapper-xhmb_vtW div div button[data-name="submit"]');
+    await createAlertBtn.click();
+}
+
+runIndcator()
