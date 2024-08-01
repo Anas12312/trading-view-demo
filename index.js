@@ -132,20 +132,24 @@ const runIndcator = async () => {
 
     await page.waitForSelector('.container-hrZZtP0J .listContainer-I087YV6b');
 
-    try {
-        const indcator = await page.$('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Advance Decline Line"]'); // Select Indcator with [data-title]
-        await indcator.click('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Advance Decline Line"]', {
-            delay: 1000,
-            offset: {
-                x: 3,
-                y: 3
-            },
-            count: 2
-        })
+    const selectIndcator = async (indcatorName) => {
+        try {
+            const indcator = await page.$('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Advance Decline Line"]'); // Select Indcator with [data-title]
+            await indcator.click(`.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="${indcatorName}"]`, {
+                delay: 1000,
+                offset: {
+                    x: 3,
+                    y: 3
+                },
+                count: 2
+            })
+        }
+        catch (e) {
+            await selectIndcator(indcatorName);
+        }
     }
-    catch (e) {
-        throw new Error()
-    }
+
+    await selectIndcator('Advance Decline Line');
 
     try {
         const goProPopup = await page.waitForSelector('div[data-dialog-name="gopro"]', {
