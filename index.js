@@ -265,6 +265,32 @@ const runIndcator = async () => {
     await page.click('button#header-toolbar-save-load', {
         delay: 1000
     })
+    await page.waitForNetworkIdle()
+    await delay(1000)
+    const dropDownBtn = (await page.$$(".button-merBkM5y"))
+    // console.log(dropDownBtn)
+    await dropDownBtn[18].click({
+        delay: 20
+    })
+    await page.waitForSelector(".accessible-NQERJsv9.item-jFqVJoPk.withIcon-jFqVJoPk.withIcon-yyMUOAN9")
+    await delay(100)
+    const exportCSVButton = (await page.$$(".accessible-NQERJsv9.item-jFqVJoPk.withIcon-jFqVJoPk.withIcon-yyMUOAN9")).at(2)
+    // console.log(exportCSVButton)
+    await exportCSVButton.click({
+        delay: 20
+    })
+    await page.waitForSelector("#time-format-select")
+    const dropDownButton = (await page.$("#time-format-select"))
+    // console.log(dropDownButton)
+    await dropDownButton.click({
+        delay: 20
+    })
+    await page.click("#time-format-iso",{
+        delay: 20
+    })
+    await page.click("[data-name='submit-button']", {
+        delay: 20
+    })
 }
 
 runIndcator()
