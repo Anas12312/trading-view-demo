@@ -74,7 +74,7 @@ async function run(stockName) {
     await page.waitForSelector('#header-toolbar-symbol-search')
 
     const searchBtn = await page.$('#header-toolbar-symbol-search')
-    
+
     // await delay(1000)
 
     await searchBtn.click({
@@ -138,9 +138,7 @@ const runIndcator = async () => {
     // Add Indcator
 
     const indcatorsBtn = await page.waitForSelector('#header-toolbar-indicators button');
-    
-    await delay(1000)
-    
+
     await indcatorsBtn.click({
         delay: 100
     });
@@ -149,10 +147,10 @@ const runIndcator = async () => {
 
     const selectIndcator = async (indcatorName) => {
         try {
-            const indcator = await page.$('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Advance Decline Line"]'); // Select Indcator with [data-title]
-            
+            const indcator = await page.$('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Average Directional Index"]'); // Select Indcator with [data-title]
+
             await delay(1000)
-            
+
             await indcator.click(`.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="${indcatorName}"]`, {
                 delay: 1000,
                 offset: {
@@ -167,31 +165,24 @@ const runIndcator = async () => {
         }
     }
 
-    await selectIndcator('Advance Decline Line');
+    await selectIndcator('Average Directional Index');
 
     try {
         const goProPopup = await page.waitForSelector('div[data-dialog-name="gopro"]', {
             timeout: 300
         })
-        
-        await delay(1000)
-        
+
         await page.click('button[aria-label="Close"]')
     }
     catch (e) { }
 
     const exitBtn = await page.waitForSelector('button[data-name="close"]');
-    
-    await delay(1000)
-    
+
     await exitBtn.click({
         delay: 100
     });
 
     // Save Changes
-    
-    await delay(1000)
-
     await page.click('button#header-toolbar-save-load', {
         delay: 1000
     })
@@ -203,21 +194,50 @@ const runIndcator = async () => {
 
     const indcatorChart = charts.at(1);
 
-    const indcatorLegend = await indcatorChart.$('.legend-l31H9iuA .sourcesWrapper-l31H9iuA .sources-l31H9iuA div:last-child .noWrapWrapper-l31H9iuA')
-    
-    await delay(1000)
-    
+    const indcatorLegend = await indcatorChart.waitForSelector('.legend-l31H9iuA .sourcesWrapper-l31H9iuA .sources-l31H9iuA div:last-child .noWrapWrapper-l31H9iuA')
+
     await indcatorLegend.click();
+
+    await delay(1000);
 
     // Setting Button
 
-    // const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-settings-action"]')
-    // await indcatorSettingButton.click();
+    const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-settings-action"]')
+    await indcatorSettingButton.click();
+
+    const indcatorSettingDialog = await page.waitForSelector('div[data-name="indicator-properties-dialog"][data-dialog-name="ADX"]')
+
+    const settings = await indcatorSettingDialog.waitForSelector('div:nth-child(3) div')
+
+    const smoothingInput = await settings.waitForSelector('div:nth-child(2) div span span input')
+
+    await smoothingInput.type('25', {
+        delay: 100
+    });
+
+    await delay(1000);
+
+    const DI_Length = await settings.waitForSelector('div:nth-child(4) div span span input')
+
+    await DI_Length.type('13', {
+        delay: 100
+    });
+
+    await delay(1000);
+
+    const okBtn = await indcatorSettingDialog.waitForSelector('button[name="submit"]')
+    await okBtn.click();
+
+    // Save Changes
+    await page.click('button#header-toolbar-save-load', {
+        delay: 1000
+    })
+
 
     // More Action Button
 
-    const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-more-action"]')
-    await indcatorSettingButton.click();
+    // const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-more-action"]')
+    // await indcatorSettingButton.click();
 
     await page.keyboard.down('Alt')
     await page.keyboard.down('A')
@@ -228,9 +248,7 @@ const runIndcator = async () => {
     // // Notification Tab
 
     const notificationTabBtn = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] .tabsWrapper-v6smTDmN div[data-name="underline-tabs-buttons"] div#id_alerts-create-edit-dialog-tabs_tablist button#alert-dialog-tabs__notifications');
-    
-    await delay(1000)
-    
+
     await notificationTabBtn.click({
         delay: 10
     })
@@ -247,16 +265,16 @@ const runIndcator = async () => {
     // await page.click('input[data-name="webhook"]',
     //     { delay: 100 }
     // );
-    
+
     // await page.type('input#webhook-url',
     //     'http://18.220.204.73/webhook',
     //     { delay: 50 }
     // );
 
     const createAlertBtn = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] form .footerWrapper-xhmb_vtW div div button[data-name="submit"]');
-    
+
     await delay(1000)
-    
+
     await createAlertBtn.click({
         delay: 100
     });
