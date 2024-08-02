@@ -194,7 +194,7 @@ const runIndcator = async () => {
 
     const indcatorChart = charts.at(1);
 
-    const indcatorLegend = await indcatorChart.waitForSelector('.legend-l31H9iuA .sourcesWrapper-l31H9iuA .sources-l31H9iuA div:last-child .noWrapWrapper-l31H9iuA')
+    const indcatorLegend = await indcatorChart.waitForSelector('div[data-name="legend"] div div div:last-child div')
 
     await indcatorLegend.click();
 
