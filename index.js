@@ -133,111 +133,136 @@ const runIndcator = async () => {
         height: 900,
         width: 1500
     })
-    await page.goto("https://www.tradingview.com/chart/")
+    await page.goto("https://www.tradingview.com/chart/", {
+        waitUntil: "domcontentloaded"
+    })
 
     // Add Indcator
 
-    const indcatorsBtn = await page.waitForSelector('#header-toolbar-indicators button');
 
-    await indcatorsBtn.click({
-        delay: 100
-    });
-
-    await page.waitForSelector('.container-hrZZtP0J .listContainer-I087YV6b');
-
-    const selectIndcator = async (indcatorName) => {
+    async function selectIndicator() {
+        console.log("trying to select indication")
         try {
-            const indcator = await page.$('.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="Average Directional Index"]'); // Select Indcator with [data-title]
+            const indcatorsBtn = await page.waitForSelector('#header-toolbar-indicators button');
 
+            await indcatorsBtn.click({
+                delay: 100
+            });
+            await page.waitForSelector('.input-qm7Rg5MB');
+            await delay(500)
+            await page.type('.input-qm7Rg5MB', 'ADX')
+            await delay(100)
+            await page.waitForSelector('[data-title="Average Directional Index"]')
             await delay(1000)
 
-            await indcator.click(`.container-hrZZtP0J .listContainer-I087YV6b .container-WeNdU0sq[data-title="${indcatorName}"]`, {
-                delay: 1000,
-                offset: {
-                    x: 3,
-                    y: 3
-                },
-                count: 2
+            await page.click(`[data-title="Average Directional Index"]`, {
+                delay: 100
             })
+            console.log("clicked on the indicator")
+
         }
         catch (e) {
-            await selectIndcator(indcatorName);
+            console.log(e)
+            await selectIndicator()
         }
     }
-
-    await selectIndcator('Average Directional Index');
-
+    await selectIndicator()
+    await delay(1000)
     try {
-        const goProPopup = await page.waitForSelector('div[data-dialog-name="gopro"]', {
-            timeout: 300
-        })
+        const exitBtn = await page.waitForSelector('[data-name="indicators-dialog"] button');
 
-        await page.click('button[aria-label="Close"]')
+        await exitBtn.click({
+            delay: 100
+        });
+        console.log("closed the dialog")
+    } catch (e) {
+        console.log("couldn't close the dialog")
     }
-    catch (e) { }
-
-    const exitBtn = await page.waitForSelector('button[data-name="close"]');
-
-    await exitBtn.click({
-        delay: 100
-    });
-
     // Save Changes
-    await page.click('button#header-toolbar-save-load', {
-        delay: 1000
-    })
-
+    await delay(1000)
+    async function save() {
+        try {
+            await page.click('button#header-toolbar-save-load', {
+                delay: 1000
+            })
+            console.log("saved")
+        } catch (e) {
+            console.log("failed to save, trying again...")
+            await save()
+        }
+    }
+    await save()
     // Select Indcator from Chart
 
-    await page.waitForSelector('.chart-markup-table.pane');
-    const charts = await page.$$('.chart-markup-table.pane')
+    async function selectTheIndicatorLegend() {
+        try {
+            await page.waitForSelector("[data-name='legend-source-title']");
+            await delay(500)
+            const charts = await page.$$("[data-name='legend-source-title']")
 
-    const indcatorChart = charts.at(1);
-
-    const indcatorLegend = await indcatorChart.waitForSelector('div[data-name="legend"] div div div:last-child div')
-
-    await indcatorLegend.click();
+            const indcatorLegend = charts.at(1);
+            await indcatorLegend.click();
+            console.log("selected the indicator legend")
+        } catch (e) {
+            console.log("failed to select the indicator legend")
+            await selectTheIndicatorLegend()
+        }
+    }
+    await delay(1000)
+    await selectTheIndicatorLegend()
 
     await delay(1000);
 
     // Setting Button
+    try {
+        await page.waitForSelector('[data-name="legend-settings-action"]')
+        const indcatorSettingButton = (await page.$$('[data-name="legend-settings-action"]')).at(0)
+        await indcatorSettingButton.click();
+        console.log("opened the settings")
+    } catch (e) {
+        console.log("failed to open the settings")
+    }
 
-    const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-settings-action"]')
-    await indcatorSettingButton.click();
+    try {
+        await delay(1000)
+        await page.waitForSelector('[data-name="indicator-properties-dialog"] input')
+        const smoothingInput = (await page.$$('[data-name="indicator-properties-dialog"] input')).at(0)
 
-    const indcatorSettingDialog = await page.waitForSelector('div[data-name="indicator-properties-dialog"][data-dialog-name="ADX"]')
+        await smoothingInput.type('25', {
+            delay: 100
+        });
 
-    const settings = await indcatorSettingDialog.waitForSelector('div:nth-child(3) div')
+        // await delay(1000);
 
-    const smoothingInput = await settings.waitForSelector('div:nth-child(2) div span span input')
+        const DI_Length = (await page.$$('[data-name="indicator-properties-dialog"] input')).at(1)
 
-    await smoothingInput.type('25', {
-        delay: 100
-    });
+        await DI_Length.type('13', {
+            delay: 100
+        });
+        console.log("changed settings")
+    } catch (e) {
+        console.log("failed to change the settings")
+    }
 
-    await delay(1000);
+    // await delay(1000);
+    try {
+        await delay(1000)
+        const okBtn = await page.waitForSelector('button[name="submit"]')
+        await okBtn.click();
+        console.log("clicked submit settings")
+    } catch (e) {
+        console.log("failed to click submit settings")
+    }
 
-    const DI_Length = await settings.waitForSelector('div:nth-child(4) div span span input')
-
-    await DI_Length.type('13', {
-        delay: 100
-    });
-
-    await delay(1000);
-
-    const okBtn = await indcatorSettingDialog.waitForSelector('button[name="submit"]')
-    await okBtn.click();
-
-    // Save Changes
-    await page.click('button#header-toolbar-save-load', {
-        delay: 1000
-    })
-
+    await save()
 
     // More Action Button
+    await page.waitForSelector("[data-name='legend-source-title']");
+    await delay(500)
+    const charts = await page.$$("[data-name='legend-source-title']")
 
-    // const indcatorSettingButton = await indcatorLegend.$('.buttonsWrapper-l31H9iuA .buttons-l31H9iuA button[data-name="legend-more-action"]')
-    // await indcatorSettingButton.click();
+    const indcatorLegend = charts.at(1);
+    await indcatorLegend?.click();
 
     await page.keyboard.down('Alt')
     await page.keyboard.down('A')
@@ -245,70 +270,104 @@ const runIndcator = async () => {
     await page.keyboard.up('Alt')
     await page.keyboard.up('A')
 
-    // // Notification Tab
+    // Notification Tab
+    try {
+        await delay(1000)
+        const notificationTabBtn = await page.waitForSelector('#alert-dialog-tabs__notifications');
 
-    const notificationTabBtn = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] .tabsWrapper-v6smTDmN div[data-name="underline-tabs-buttons"] div#id_alerts-create-edit-dialog-tabs_tablist button#alert-dialog-tabs__notifications');
+        await notificationTabBtn.click({
+            delay: 10
+        })
+        console.log("pressed on the notification tab")
+    } catch (e) {
+        console.log("failed to press on the notification tab")
+    }
 
-    await notificationTabBtn.click({
-        delay: 10
-    })
+    // // const enableWebhook = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] .tabsWrapper-v6smTDmN div[data-name="underline-tabs-buttons"] div#id_alerts-create-edit-dialog-tabs_tablist button#alert-dialog-tabs__notifications');
+    // // await notificationTabBtn.click({
+    // //     delay: 10
+    // // })
 
-    // const enableWebhook = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] .tabsWrapper-v6smTDmN div[data-name="underline-tabs-buttons"] div#id_alerts-create-edit-dialog-tabs_tablist button#alert-dialog-tabs__notifications');
-    // await notificationTabBtn.click({
-    //     delay: 10
-    // })
+    // // await page.click('#alert-dialog-tabs__notifications',
+    // //     { delay: 1000 }
+    // // )
 
-    // await page.click('#alert-dialog-tabs__notifications',
-    //     { delay: 1000 }
-    // )
+    // // await page.click('input[data-name="webhook"]',
+    // //     { delay: 100 }
+    // // );
 
-    // await page.click('input[data-name="webhook"]',
-    //     { delay: 100 }
-    // );
+    // // await page.type('input#webhook-url',
+    // //     'http://18.220.204.73/webhook',
+    // //     { delay: 50 }
+    // // );
 
-    // await page.type('input#webhook-url',
-    //     'http://18.220.204.73/webhook',
-    //     { delay: 50 }
-    // );
-
-    const createAlertBtn = await page.waitForSelector('div[data-name="alerts-create-edit-dialog"] form .footerWrapper-xhmb_vtW div div button[data-name="submit"]');
-
-    await delay(1000)
-
-    await createAlertBtn.click({
-        delay: 100
-    });
+    try {
+        await delay(1000)
+        const createAlertBtn = await page.waitForSelector('button[data-name="submit"]');
+        await delay(1000)
+        await createAlertBtn.click({
+            delay: 100
+        });
+        console.log("pressed create alert")
+    } catch (e) {
+        console.log("failed to press create alert")
+    }
 
     // Save Changes
-    await page.click('button#header-toolbar-save-load', {
-        delay: 1000
-    })
-    await page.waitForNetworkIdle()
+    await save()
     await delay(1000)
-    const dropDownBtn = (await page.$$(".button-merBkM5y"))
-    // console.log(dropDownBtn)
-    await dropDownBtn[18].click({
-        delay: 20
-    })
-    await page.waitForSelector(".accessible-NQERJsv9.item-jFqVJoPk.withIcon-jFqVJoPk.withIcon-yyMUOAN9")
-    await delay(100)
-    const exportCSVButton = (await page.$$(".accessible-NQERJsv9.item-jFqVJoPk.withIcon-jFqVJoPk.withIcon-yyMUOAN9")).at(2)
-    // console.log(exportCSVButton)
-    await exportCSVButton.click({
-        delay: 20
-    })
-    await page.waitForSelector("#time-format-select")
-    const dropDownButton = (await page.$("#time-format-select"))
-    // console.log(dropDownButton)
-    await dropDownButton.click({
-        delay: 20
-    })
-    await page.click("#time-format-iso",{
-        delay: 20
-    })
-    await page.click("[data-name='submit-button']", {
-        delay: 20
-    })
+    async function zoomOut() {
+        await page.keyboard.down('Control')
+        await page.keyboard.down('ArrowDown')
+        await page.keyboard.up('ArrowDown')
+        await delay(500)
+        await page.keyboard.down('ArrowDown')
+        await page.keyboard.up('ArrowDown')
+        await delay(500)
+        await page.keyboard.down('ArrowDown')
+        await page.keyboard.up('ArrowDown')
+    }
+    await zoomOut()
+    async function downloadCSV() {
+        try {
+            await page.waitForSelector('[data-name="save-load-menu"]')
+            const dropDownBtn = await page.$('[data-name="save-load-menu"]')
+            await dropDownBtn.click({
+                delay: 20
+            })
+            await delay(1000)
+            console.log("clicked on the dropdown button")
+            await page.waitForSelector('[data-name="menu-inner"] [data-role="menuitem"]')
+            const menuBtn = (await page.$$('[data-name="menu-inner"] [data-role="menuitem"]')).at(5)
+            menuBtn.click({
+                delay: 100
+            })
+            await delay(1000)
+            console.log("clicked on the menu button")
+            await page.waitForSelector("#time-format-select")
+            const dropDownButton = (await page.$("#time-format-select"))
+            await dropDownButton.click({
+                delay: 20
+            })
+            await delay(1000)
+            await page.waitForSelector("#time-format-iso")
+            await page.click("#time-format-iso", {
+                delay: 20
+            })
+            await delay(1000)
+            console.log("changed time format")
+            await page.click("[data-name='submit-button']", {
+                delay: 20
+            })
+            console.log("submitted the downloadCSV dialog")
+        } catch (e) {
+            console.log("failed to save CSV, trying again...")
+            await downloadCSV()
+        }
+    }
+    await downloadCSV()
+
+
 }
 
 runIndcator()
